@@ -1,0 +1,481 @@
+
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacKimReview</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root { --main: #00c2a8; --bg: #f6f8fa; --card: #fff; --border: #e5e7eb; --text:#111; --sub: #555555; }
+  body.dark { --bg:#0b0f19; --card:#151c2c; --border:#232f48; --text:#e5e7eb; --sub: #aaaaaa; }
+  * { box-sizing:border-box; font-family:system-ui,sans-serif; }
+  body { margin:0; background:var(--bg); color:var(--text); padding-bottom:40px; transition:.2s; }
+  header { background:var(--card); border-bottom:1px solid var(--border); padding:8px 10px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+  header h1 { font-size: 15px; margin: 0; white-space: nowrap; }
+  .gradient-text { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #00ff87 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  
+  .wrap { max-width:800px; margin:0 auto; padding:12px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; }
+  textarea,input,select{ width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--card); color:var(--text); }
+  button{ background:var(--main); color:#fff; border:0; border-radius:8px; padding:10px 14px; font-weight:700; cursor:pointer; font-size:16px; }
+  button.secondary{ background:var(--border); color:var(--text); }
+  .row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  header .row button { padding: 4px 8px; font-size: 12px; }
+  .tabs{ display:flex; gap:6px; margin-bottom:10px; }
+  .tabs button{ background:var(--border); color:var(--text); }
+  .tabs button.active{ background:var(--main); color:#fff; }
+  .drop{ border:2px dashed var(--border); border-radius:8px; padding:16px; text-align:center; cursor:pointer; background:var(--bg); }
+  .hidden{ display:none !important; }
+  .spinner{ width:28px; height:28px; border:3px solid #ddd; border-top-color:var(--main); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 8px; }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+
+  /* Napakalinis at propesyonal na pormat ng reviewer notes */
+  .lecture-content { font-size: 16px; line-height: 1.6; word-break: break-word; }
+  .lecture-content h2 { font-size: 19px; color: var(--main); margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .lecture-content h3 { font-size: 17px; color: var(--text); margin-top: 14px; margin-bottom: 6px; font-weight: bold; }
+  .lecture-content ul { padding-left: 20px; margin: 6px 0; }
+  .lecture-content li { margin-bottom: 6px; }
+  .lecture-content p { margin: 8px 0; }
+  .lecture-content strong { color: var(--text); font-weight: bold; }
+
+  .q-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--bg); font-size: 17px; margin-bottom: 12px; }
+  .opt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); margin-top: 6px; cursor: pointer; font-size: 16px; }
+  .explain{ background:#e0f2f1; color:#111; padding:8px; border-radius:6px; font-size:16px; margin-top:8px; }
+  .opt input[type="radio"] { margin: 0; width: 18px; height: 18px; accent-color: var(--main); }
+  .opt.correct{ border-color:#22c55e; background:#ecfdf5; color:#111; }
+  .opt.wrong{ border-color:#ef4444; background:#fef2f2; color:#111; }
+  details{ border:0; }
+  details summary{ list-style:none; cursor:pointer; font-weight:800; font-size:18px; display:flex; justify-content:space-between; align-items:center; }
+  details summary::-webkit-details-marker{ display:none; }
+  .arrow{ transition:.2s; }
+  details[open] .arrow{ transform:rotate(180deg); }
+  .content{ margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+  .history-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="gradient-text">📚 MacKimReview</h1>
+  <div class="row">
+    <button class="secondary" id="themeBtn">🌙</button>
+    <button class="secondary" id="historyBtn">📜 History</button>
+    <button class="secondary" id="apiBtn">🔑 API</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="card">
+    <details id="step1" open>
+      <summary>Step 1: Lagay ng Material <span class="arrow">▼</span></summary>
+      <div class="content">
+        <div class="tabs">
+          <button id="tabText" class="active">Text</button>
+          <button id="tabPdf">PDF</button>
+          <button id="tabTxt">TXT</button>
+        </div>
+        <div id="boxText"><textarea id="textInput" rows="7" placeholder="I-paste dito lecture / notes mo..."></textarea></div>
+        
+        <div id="boxPdf" class="hidden">
+          <label class="drop" style="display:block;">
+            Pumili ng PDF File
+            <input type="file" id="pdfFile" accept=".pdf" style="margin-top:8px;">
+          </label>
+          <div id="pdfInfo" style="font-size:13px; margin-top:8px;"></div>
+        </div>
+        
+        <div id="boxTxt" class="hidden">
+          <label class="drop" style="display:block;">
+            Pumili ng .TXT File
+            <input type="file" id="txtFile" accept=".txt" style="margin-top:8px;">
+          </label>
+          <div id="txtInfo" style="font-size:13px; margin-top:8px;"></div>
+        </div>
+
+        <div style="margin-top:12px" class="row">
+          <select id="model" style="flex:1">
+            <option value="openai/gpt-oss-120b">gpt-oss-120b (Recommended)</option>
+            <option value="openai/gpt-oss-20b">gpt-oss-20b (Fast)</option>
+            <option value="llama-3.3-70b-versatile">llama-3.3-70b</option>
+          </select>
+          <button id="btnLecture">Gumawa ng Notes</button>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div id="loading" class="card hidden"><div class="spinner"></div><div id="loadText">Naglo-load...</div></div>
+  
+  <div id="lectureBox" class="card hidden">
+    <div class="row" style="justify-content:space-between; margin-bottom:12px">
+      <b>Step 2: AI Notes</b>
+      <button id="btnExam">Exam ➡️</button>
+    </div>
+    
+    <div id="lectureOut" class="lecture-content"></div>
+
+    <div class="row" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border); justify-content:flex-end; gap:8px;">
+      <button class="secondary" id="ttsBtn">🔊 Basahin</button>
+      <button class="secondary" id="copyBtn">📋 Copy</button>
+      <button class="secondary" id="exportBtn">📥 I-save</button>
+    </div>
+  </div>
+
+  <div id="examBox" class="card hidden">
+    <div class="row" style="justify-content:space-between">
+      <b>Step 3: Mock Exam</b>
+      <div class="row">
+        <button class="secondary" id="backToNotesBtn" style="padding: 4px 8px; font-size: 12px;">⬅️ Balik sa Notes</button>
+        <span style="font-family:monospace">⏱️ <span id="timer">00:00</span></span>
+      </div>
+    </div>
+    <form id="examForm" style="margin-top:12px; display:flex; flex-direction:column; gap:12px"></form>
+    <div class="row" style="margin-top:14px; justify-content:space-between">
+      <button id="submitExam">Submit</button>
+      <div id="score" class="hidden"><b>Score: <span id="scoreVal">0/0</span></b></div>
+    </div>
+  </div>
+</div>
+
+<div id="apiModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; padding:16px">
+  <div class="card" style="width:100%; max-width:360px">
+    <b>Groq API Key</b><input id="apiInput" type="password" placeholder="gsk_..." style="margin:10px 0">
+    <div class="row"><button id="saveKey" style="flex:1">Save</button><button class="secondary" id="closeKey" style="flex:1">Close</button></div>
+  </div>
+</div>
+
+<div id="historyModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; padding:16px">
+  <div class="card" style="width:100%; max-width:400px; max-height:80vh; overflow-y:auto;">
+    <div class="row" style="justify-content:space-between; margin-bottom: 8px;">
+      <b>Saved Review History</b>
+      <button class="secondary" id="clearHistoryBtn" style="padding: 4px 8px; font-size: 12px; background: #ef4444; color: #fff;">🗑️ Burahin Lahat</button>
+    </div>
+    <div id="historyList" style="margin:10px 0"></div>
+    <button class="secondary" id="closeHistory" style="width:100%; margin-top: 10px;">Close</button>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let extracted="", lectureHTML="", examData=[], timerInt=null, secs=0;
+let currentHistoryIndex = null;
+const $ = id => document.getElementById(id);
+
+const savedTheme = localStorage.getItem('theme');
+if(savedTheme==='dark'){ document.body.classList.add('dark'); $("themeBtn").textContent="☀️"; }
+$("themeBtn").onclick = () => {
+  document.body.classList.toggle('dark');
+  const d = document.body.classList.contains('dark');
+  $("themeBtn").textContent = d ? "☀️" : "🌙";
+  localStorage.setItem('theme', d?'dark':'light');
+};
+
+function getKey(){ return localStorage.getItem('groq_api_key')||""; }
+$("apiBtn").onclick=()=>{ $("apiInput").value=getKey(); $("apiModal").classList.remove("hidden"); }
+$("closeKey").onclick=()=>{ $("apiModal").classList.add("hidden"); }
+$("saveKey").onclick=()=>{ localStorage.setItem('groq_api_key', $("apiInput").value.trim()); $("apiModal").classList.add("hidden"); alert("Saved!"); }
+
+function showTab(w){ ["Text","Pdf","Txt"].forEach(t=>{ $("tab"+t).classList.remove("active"); $("box"+t).classList.add("hidden"); }); $("tab"+w).classList.add("active"); $("box"+w).classList.remove("hidden"); }
+$("tabText").onclick=()=>showTab("Text"); $("tabPdf").onclick=()=>showTab("Pdf"); $("tabTxt").onclick=()=>showTab("Txt");
+
+$("pdfFile").onchange=async e=>{ 
+  const f=e.target.files[0]; if(!f) return; 
+  $("pdfInfo").textContent="Binabasa ang PDF..."; 
+  try {
+    const buf=await f.arrayBuffer(); 
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise; 
+    let txt=""; 
+    for(let i=1;i<=pdf.numPages;i++){ 
+      const p=await pdf.getPage(i); 
+      const c=await p.getTextContent(); 
+      txt+=c.items.map(x=>x.str).join(" ")+"\n"; 
+    } 
+    extracted=txt; 
+    $("pdfInfo").textContent=`✅ ${pdf.numPages} pages nabasa`; 
+  } catch(err) {
+    $("pdfInfo").textContent=`❌ Error sa pagbasa ng PDF`;
+  }
+};
+
+$("txtFile").onchange=e=>{ 
+  const f=e.target.files[0]; if(!f) return; 
+  const r=new FileReader(); 
+  r.onload=ev=>{ extracted=ev.target.result; $("txtInfo").textContent="✅ TXT nabasa"; }; 
+  r.readAsText(f); 
+};
+
+function getSource(){ return !$("boxText").classList.contains("hidden") ? $("textInput").value.trim() : extracted; }
+
+async function callGroq(prompt, system){
+  const key=getKey(); if(!key) throw new Error("Wala pang API Key. Ilagay muna sa 🔑 API Key sa taas.");
+  const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{ 
+    method:"POST", 
+    headers:{ 
+      "Content-Type":"application/json", 
+      "Authorization":"Bearer "+key 
+    }, 
+    body:JSON.stringify({ 
+      model:$("model").value, 
+      messages:[{role:"system",content:system},{role:"user",content:prompt}], 
+      temperature:0.5 
+    }) 
+  });
+  if(!res.ok){ const j=await res.json().catch(()=>({})); throw new Error(j.error?.message||"API Error: Siguraduhing may internet at tama ang API Key."); }
+  const d=await res.json(); return d.choices[0].message.content;
+}
+
+function saveHistory(title, html, score = null){
+  let history = JSON.parse(localStorage.getItem('review_history')||"[]");
+  if(currentHistoryIndex !== null && history[currentHistoryIndex]) {
+    history[currentHistoryIndex].score = score;
+  } else {
+    history.unshift({date: new Date().toLocaleString(), title: title.slice(0, 30), html, score});
+    currentHistoryIndex = 0;
+  }
+  if(history.length > 10) history.pop();
+  localStorage.setItem('review_history', JSON.stringify(history));
+}
+
+/* MALINIS NA MARKDOWN PARSER: Nililinis ang mga asterisks at pormat para maging pro-reviewer itsura */
+function parseMarkdown(text) {
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Headings
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+  // Bullet points
+  html = html.replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  html = html.replace(/<\/ul>\s*<ul>/g, '');
+
+// Idagdag ang linyang ito sa loob ng parseMarkdown function para burahin ang mga linya:
+html = html.replace(/^\s*[-_]{3,}\s*$/gim, '');
+
+  return html;
+}
+
+/* TTS: Malinis na babasahin ang text nang walang special characters */
+let isSpeaking = false;
+$("ttsBtn").onclick = () => {
+  if (!('speechSynthesis' in window)) {
+    alert("Hindi suportado ng browser mo ang Speech.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  if (isSpeaking) {
+    isSpeaking = false;
+    $("ttsBtn").textContent = "🔊 Basahin";
+    return;
+  }
+
+  let text = $("lectureOut").innerText || "";
+  text = text.replace(/[*#_`~-]+/g, " "); 
+  text = text.replace(/[\r\n]+/g, " ").trim();
+
+  if (!text) {
+    alert("Walang text na babasahin.");
+    return;
+  }
+
+  // Hatiin sa bawat pangungusap o linya para may natural na hinto
+  const sentences = text.match(/[^.!?]+[.!?]+|\s*[^.!?]+$/g) || [text];
+  let index = 0;
+
+  isSpeaking = true;
+  $("ttsBtn").textContent = "⏹️ Hinto";
+
+  function speakNext() {
+    if (index >= sentences.length || !isSpeaking) {
+      isSpeaking = false;
+      $("ttsBtn").textContent = "🔊 Basahin";
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(sentences[index].trim());
+    utterance.lang = 'fil-PH';
+    
+    // ⭐ Dito mo papabagalin: 0.85 ang tamang bilis para maging normal ang tono ng pagtuturo
+    utterance.rate = 0.85; 
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      index++;
+      // Lagyan ng kaunting delay (hinto) bago basahin ang sunod na pangungusap
+      setTimeout(speakNext, 50); 
+    };
+
+    utterance.onerror = () => {
+      index++;
+      speakNext();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  speakNext();
+};
+
+$("copyBtn").onclick=()=>{ 
+  const text = $("lectureOut").innerText;
+  navigator.clipboard.writeText(text); 
+  alert("Na-copy lahat ng notes!"); 
+}
+
+$("exportBtn").onclick=()=>{
+  const text = $("lectureOut").innerText;
+  const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = "MacKimReview-Notes.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+$("btnLecture").onclick=async()=>{
+  const src=getSource(); if(!src) return alert("Lagay ka muna ng material o pumili ng file!");
+  $("loading").classList.remove("hidden"); $("loadText").textContent="Ginagawan ng notes...";
+  try{
+const rawText=await callGroq(`Gawan ng malinaw, kumpleto, at detalyadong Reviewer Notes ang ibinigay na materyal. Sundin ang wika ng materyal: kung English ito, isulat sa English; kung Tagalog, isulat sa Tagalog/Taglish. Gumamit ng malalaking ulo ng paksa (## o ###) at malinis na bullet points (-) para sa mabilis na pag-aaral:\n\n${src}`, "You are an expert professor creating clean study notes matching the language of the source material.");
+    
+    lectureHTML = rawText;
+    
+    // I-parse ang markdown para maging malinis na HTML elements sa screen
+    $("lectureOut").innerHTML = parseMarkdown(rawText); 
+    $("lectureBox").classList.remove("hidden"); 
+    $("examBox").classList.add("hidden");
+    $("step1").removeAttribute("open");
+    currentHistoryIndex = null;
+    saveHistory(src, rawText, null);
+    window.scrollTo({top:$("lectureBox").offsetTop-70, behavior:"smooth"});
+  }catch(e){ alert(e.message); } 
+  $("loading").classList.add("hidden");
+};
+
+$("historyBtn").onclick = () => {
+  const list = $("historyList"); list.innerHTML="";
+  let history = JSON.parse(localStorage.getItem('review_history')||"[]");
+  if(history.length === 0){ list.innerHTML = "<p>Walang nakatagong history.</p>"; }
+  else {
+    history.forEach((h, idx)=>{
+      const div = document.createElement("div");
+      div.className = "history-item";
+      
+      const info = document.createElement("div");
+      info.style.flex = "1";
+      info.style.cursor = "pointer";
+      let scoreText = h.score ? ` | 🎯 Score: <b style="color:var(--main);">${h.score}</b>` : " | 🎯 Score: <i>Wala pa</i>";
+      info.innerHTML = `<div><b>${h.date}</b>${scoreText}</div><div style="font-size:12px; color:gray;">${h.title}...</div>`;
+      info.onclick = ()=>{
+        lectureHTML = h.html;
+        $("lectureOut").innerHTML = parseMarkdown(h.html);
+        currentHistoryIndex = idx;
+        $("lectureBox").classList.remove("hidden");
+        $("examBox").classList.add("hidden");
+        $("historyModal").classList.add("hidden");
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "❌";
+      delBtn.className = "secondary";
+      delBtn.style.cssText = "padding: 2px 6px; font-size: 12px; background: transparent; border: none; cursor: pointer;";
+      delBtn.onclick = (e)=>{
+        e.stopPropagation();
+        history.splice(idx, 1);
+        if(currentHistoryIndex === idx) currentHistoryIndex = null;
+        else if(currentHistoryIndex > idx) currentHistoryIndex--;
+        localStorage.setItem('review_history', JSON.stringify(history));
+        $("historyBtn").click();
+      };
+
+      div.appendChild(info);
+      div.appendChild(delBtn);
+      list.appendChild(div);
+    });
+  }
+  $("historyModal").classList.remove("hidden");
+};
+
+$("closeHistory").onclick = () => { $("historyModal").classList.add("hidden"); };
+$("clearHistoryBtn").onclick = () => {
+  if(confirm("Sigurado ka bang gusto mong burahin ang lahat ng history?")) {
+    localStorage.removeItem('review_history');
+    currentHistoryIndex = null;
+    $("historyList").innerHTML = "<p>Walang nakatagong history.</p>";
+  }
+};
+
+$("backToNotesBtn").onclick = () => {
+  $("examBox").classList.add("hidden");
+  $("lectureBox").classList.remove("hidden");
+  window.scrollTo({top: $("lectureBox").offsetTop - 70, behavior: "smooth"});
+};
+
+$("btnExam").onclick = async () => {
+  if(!lectureHTML) return; 
+  $("loading").classList.remove("hidden"); 
+  $("loadText").textContent = "Gumagawa ng exam...";
+  try { 
+    let txt = await callGroq(`Gawan ng 10 MCQs JSON lang: [{"id":1,"question":"...","options":["A","B","C","D"],"correctIndex":0,"explanation":"..."}]\n\n${lectureHTML}`, "Return valid JSON only"); 
+    txt = txt.replace(/```json|```/g,"").trim(); 
+    examData = JSON.parse(txt); 
+    renderExam(); 
+    $("lectureBox").classList.add("hidden");
+    $("examBox").classList.remove("hidden"); 
+    startTimer(); 
+    window.scrollTo({top: 0, behavior: "smooth"});
+  } catch(e) { 
+    alert(e.message); 
+  } 
+  $("loading").classList.add("hidden");
+};
+
+function renderExam(){ 
+  const form=$("examForm"); form.innerHTML=""; 
+  examData.forEach((q,i)=>{ 
+    const div=document.createElement("div"); div.className="q-card"; 
+    div.innerHTML=`<b>${i+1}. ${q.question}</b>`+q.options.map((o,oi)=>`<label class="opt"><input type="radio" name="q${i}" value="${oi}"><span>${o}</span></label>`).join("")+`<div id="exp${i}" class="explain hidden"><b>Paliwanag:</b> ${q.explanation}</div>`; 
+    form.appendChild(div); 
+  }); 
+  $("score").classList.add("hidden"); 
+}
+
+function startTimer(){ 
+  clearInterval(timerInt); secs=0; 
+  timerInt=setInterval(()=>{ 
+    secs++; 
+    const m=String(Math.floor(secs/60)).padStart(2,"0"); 
+    const s=String(secs%60).padStart(2,"0"); 
+    $("timer").textContent=`${m}:${s}`; 
+  },1000); 
+}
+
+$("submitExam").onclick = e => { 
+  e.preventDefault(); clearInterval(timerInt); let sc = 0; 
+  examData.forEach((q,i)=>{ 
+    const sel = document.querySelector(`input[name="q${i}"]:checked`); 
+    const exp = $("exp" + i); if(exp) exp.classList.remove("hidden"); 
+    if(sel){ 
+      const v = +sel.value; const lb = sel.closest(".opt"); 
+      if(v === q.correctIndex){ sc++; lb.classList.add("correct"); }
+      else{ lb.classList.add("wrong"); document.querySelectorAll(`input[name="q${i}"]`)[q.correctIndex]?.closest(".opt")?.classList.add("correct"); } 
+    } 
+  }); 
+  const scoreStr = `${sc} / ${examData.length}`;
+  $("scoreVal").textContent = scoreStr; 
+  $("score").classList.remove("hidden"); 
+
+  saveHistory(lectureHTML.replace(/<[^>]*>?/gm, ''), lectureHTML, scoreStr);
+};
+</script>
+</body>
+</html>
+
