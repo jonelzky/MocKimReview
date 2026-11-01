@@ -19,3 +19,6 @@ Made for Students • AI Powered • Offline Ready © 2026 ChiNhel XForge
 
 Built purely on Termux - Phone Only!
 
+
+### 🔗 Download APK: [MocKimReview.apk](MocKimReview.apk) - 1.31 MB - Built purely on phone!
+
