@@ -9,14 +9,14 @@
 <style>
   :root { --main: #00c2a8; --bg: #f6f8fa; --card: #fff; --border: #e5e7eb; --text:#111; --sub: #555555; }
   body.dark { --bg:#0b0f19; --card:#151c2c; --border:#232f48; --text:#e5e7eb; --sub: #aaaaaa; }
-  * { box-sizing:border-box; font-family:system-ui,sans-serif; }
-  body { margin:0; background:var(--bg); color:var(--text); padding-bottom:40px; transition:.2s; }
-  header { background:var(--card); border-bottom:1px solid var(--border); padding:8px 10px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+    * { box-sizing:border-box; font-family:system-ui,sans-serif; }
+  body { margin:0; background:var(--bg); color:var(--text); padding-bottom:40px; transition:.2s; width:100%; min-height:100vh; }
+  header { background:var(--card); border-bottom:1px solid var(--border); padding:8px 10px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; width:100%; }
   header h1 { font-size: 15px; margin: 0; white-space: nowrap; }
   .gradient-text { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #00ff87 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   
-  .wrap { max-width:800px; margin:0 auto; padding:12px; }
-  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; }
+  .wrap { max-width:100%; width:100%; margin:0 auto; padding:12px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; width:100%; }
   textarea,input,select{ width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--card); color:var(--text); }
   button{ background:var(--main); color:#fff; border:0; border-radius:8px; padding:10px 14px; font-weight:700; cursor:pointer; font-size:16px; }
   button.secondary{ background:var(--border); color:var(--text); }
@@ -30,7 +30,6 @@
   .spinner{ width:28px; height:28px; border:3px solid #ddd; border-top-color:var(--main); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 8px; }
   @keyframes spin{ to{ transform:rotate(360deg) } }
 
-  /* Napakalinis at propesyonal na pormat ng reviewer notes */
   .lecture-content { font-size: 16px; line-height: 1.6; word-break: break-word; }
   .lecture-content h2 { font-size: 19px; color: var(--main); margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
   .lecture-content h3 { font-size: 17px; color: var(--text); margin-top: 14px; margin-bottom: 6px; font-weight: bold; }
@@ -52,6 +51,11 @@
   details[open] .arrow{ transform:rotate(180deg); }
   .content{ margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
   .history-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+
+  @media (max-width: 768px) {
+    .wrap { padding:8px; }
+    .card { border-radius:8px; }
+  }
 </style>
 </head>
 <body>
